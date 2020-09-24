@@ -30,10 +30,8 @@ print(wood_data.head(), steel_data.head())
 
 def ranking_over_time(coaster: str, park: str, rank_data: pd.DataFrame):
     filtered_rankings = rank_data[(rank_data['Name'] == coaster) & (rank_data['Park'] == park)]
-    print(park)
     coaster_years = list(filtered_rankings['Year of Rank'])
     coaster_ranks = list(filtered_rankings['Rank'])
-
     rank_ticks = sorted(list(set(coaster_ranks)))
 
     ax = plt.subplot()
@@ -51,7 +49,7 @@ def ranking_over_time(coaster: str, park: str, rank_data: pd.DataFrame):
 # ranking_over_time('Lightning Racer', 'Hersheypark', wood_data)
 # plt.subplot(1, 2, 2)
 ranking_over_time('Millennium Force', 'Cedar Point', steel_data)
-plt.show()
+# plt.show()
 
 plt.clf()
 
@@ -67,15 +65,43 @@ plt.clf()
 # write function to plot rankings over time for 2 roller coasters here:
 
 
+def two_rankings_over_time(coaster1: str, park1: str, coaster2: str, park2: str, rank_data: pd.DataFrame):
+    filtered_rankings1 = rank_data[(rank_data['Name'] == coaster1) & (rank_data['Park'] == park1)]
+    filtered_rankings2 = rank_data[(rank_data['Name'] == coaster2) & (rank_data['Park'] == park2)]
+    coaster1_years = list(filtered_rankings1['Year of Rank'])
+    coaster1_ranks = list(filtered_rankings1['Rank'])
+    coaster2_years = list(filtered_rankings2['Year of Rank'])
+    coaster2_ranks = list(filtered_rankings2['Rank'])
+
+    rank_ticks = sorted(list(set(coaster1_ranks + coaster2_ranks)))
+    year_ticks = sorted(list(set(coaster1_years + coaster2_years)))
+
+    ax = plt.subplot()
+    plt.plot(coaster1_years, coaster1_ranks, marker='o', label=coaster1)
+    plt.plot(coaster2_years, coaster2_ranks, marker='^', label=coaster2)
+    plt.xlabel('Year')
+    plt.ylabel('Rank')
+    plt.title(f'{coaster1} vs. {coaster2}: Rankings by Year')
+    plt.xticks(year_ticks)
+    plt.yticks(rank_ticks)
+    ax.invert_yaxis()
+    plt.legend()
+    plt.subplots_adjust(bottom=0.2)
 
 
-
-
-
-
-
+two_rankings_over_time('El Toro', 'Six Flags Great Adventure', 'Boulder Dash', 'Lake Compounce', wood_data)
+# plt.show()
 
 plt.clf()
+
+# 5.
+# Write a function that will plot the ranking of the top n ranked roller coasters over time as lines. Your function
+# should take a number n and a ranking DataFrame as arguments. Make sure to include informative labels that describe
+# your visualization.
+#
+# For example, if n == 5, your function should plot a line for each roller coaster that has a rank of 5 or lower.
+#
+# Call your function with a value for n and either the wood ranking or steel ranking DataFrame.
 
 # write function to plot top n rankings over time here:
 
