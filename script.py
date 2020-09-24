@@ -106,13 +106,44 @@ plt.clf()
 # write function to plot top n rankings over time here:
 
 
+def plot_top_five(n: int, rank_data: pd.DataFrame):
+    filtered_data = rank_data[rank_data['Rank'] <= 5]
+    coasters = list(filtered_data['Name'].unique())
+    years = sorted(list(filtered_data['Year of Rank'].unique()))
+    markers = ['s', '*', '^', 'P', 'X']
+    marker_idx = 0
+
+    for coaster in coasters:
+        coaster_data = filtered_data[filtered_data['Name'] == coaster]
+        coaster_ranks = list(coaster_data['Rank'])
+        coaster_years = list(coaster_data['Year of Rank'])
+
+        if len(coaster_ranks) < 2:
+            marker = markers[marker_idx]
+            if marker_idx == 4:
+                marker_idx = 0
+            else:
+                marker_idx += 1
+        else:
+            marker = '.'
+
+        plt.plot(coaster_years, coaster_ranks, marker=marker, label=coaster)
+
+    ax = plt.subplot()
+    plt.xticks(years)
+    plt.yticks(range(5, 0, -1))
+    plt.xlabel('Years')
+    plt.ylabel('Rank')
+    plt.title(f'Top Five (in Class) Roller Coasters from {years[0]} to {years[-1]}')
+    plt.legend(bbox_to_anchor=(1, 1), fontsize='x-small')
+    ax.invert_yaxis()
+    plt.subplots_adjust(right=0.75)
+
+    print(filtered_data)
 
 
-
-
-
-
-
+plot_top_five(5, wood_data)
+# plt.show()
 
 plt.clf()
 
