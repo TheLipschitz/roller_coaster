@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # 2. Roller coasters are thrilling amusement park rides designed to make you squeal and scream! They take you up high,
@@ -139,41 +140,119 @@ def plot_top_five(n: int, rank_data: pd.DataFrame):
     ax.invert_yaxis()
     plt.subplots_adjust(right=0.75)
 
-    print(filtered_data)
-
 
 plot_top_five(5, wood_data)
 # plt.show()
 
 plt.clf()
 
+# 6.
+# Now that you’ve visualized rankings over time, let’s dive into the actual statistics of roller coasters themselves.
+# Captain Coaster is a popular site for recording roller coaster information. Data on all roller coasters documented on
+# Captain Coaster has been accessed through its API and stored in roller_coasters.csv. Load the data from the csv into
+# a DataFrame and inspect it to gain familiarity with the data.
+#
+# Open the hint for more information about each column of the dataset.
+
 # load roller coaster data here:
 
+coaster_data = pd.read_csv('roller_coasters.csv')
+# print(coaster_data.head())
 
-
+# 7.
+# Write a function that plots a histogram of any numeric column of the roller coaster DataFrame. Your function
+# should take a DataFrame and a column name for which a histogram should be constructed as arguments. Make sure
+# to include informative labels that describe your visualization.
+#
+# Call your function with the roller coaster DataFrame and one of the column names.
 # write function to plot histogram of column values here:
 
 
+def column_hist(data: pd.DataFrame, column_name: str):
+    accepted_columns = ['speed', 'height', 'length', 'num_inversions']
+    if column_name not in accepted_columns:
+        print(f'The column "{column_name}" doesn\'t contain numerical data, please try a different column.')
+        return
+
+    if column_name == accepted_columns[0]:
+        x_label = 'Speed in Kilometers per Hour'
+    elif column_name == accepted_columns[3]:
+        x_label = 'Number of Inversions'
+    else:
+        x_label = f'{column_name.title()} in Meters'
+
+    ax = plt.subplot()
+    column_values = list(data[column_name].dropna())
+    max_val = data[column_name].max()
+    min_val = data[column_name].min()
+    bin_count = max(10, min(20, int(max_val - min_val)))
+
+    counts, bins = plt.hist(column_values, bins=bin_count, edgecolor='lightblue')[:2]
+    plt.xlabel(x_label)
+    plt.xticks([max(bins[i], 0) for i in range(len(bins)) if i % 2 == 0], fontsize='small')
+    plt.yticks(fontsize='small')
+    bin_centers = 0.5 * np.diff(bins) + bins[:-1]
+    for count, x in zip(counts, bin_centers):
+        ax.annotate(str(int(count)), xy=(x, 0), xycoords=('data', 'axes fraction'),
+                    xytext=(0, 6), textcoords='offset points', va='top', ha='center', fontsize='xx-small')
+    plt.ylabel('Roller Coasters')
+    plt.title(f'Distribution of {x_label}')
+    plt.subplots_adjust(bottom=0.15)
 
 
-
-
-
-
-
+column_hist(coaster_data, 'speed')
+# plt.show()
 
 plt.clf()
 
+# 8.
+# Write a function that creates a bar chart showing the number of inversions for each roller coaster at an amusement
+# park. Your function should take the roller coaster DataFrame and an amusement park name as arguments. Make sure to
+# include informative labels that describe your visualization.
+#
+# Call your function with the roller coaster DataFrame and an amusement park name.
+#
 # write function to plot inversions by coaster at a park here:
 
 
+def inversions_by_park(data: pd.DataFrame, park_name: str):
+    if park_name not in list(data.park):
+        print(f'{park_name} is not a park found in the dataset.')
+        return
+    park_data = data[(data.park == park_name) & (data.status == 'status.operating')].sort_values('name').fillna(0)
+    coaster_names = list(park_data.name)
+    if not coaster_names:
+        print(f'{park_name} does not have any operating roller coasters.')
+        return
+    inversion_counts = park_data.num_inversions
+    x_ticks = range(len(coaster_names))
+    y_ticks = range(int(inversion_counts.max()) + 1)
+    if len(x_ticks) > 15:
+        f_size = 'x-small'
+    elif len(x_ticks) > 10:
+        f_size = 'small'
+    else:
+        f_size = 'medium'
 
+    plt.bar(x_ticks, inversion_counts)
+    plt.xticks(x_ticks, labels=coaster_names, rotation=50, fontsize=f_size, ha='right', y=0.01)
+    plt.yticks(y_ticks)
+    plt.ylabel('Number of Inversions')
+    plt.subplots_adjust(bottom=0.3)
+    plt.title(f'Inversions by Roller Coaster at {park_name}')
 
+# This code was used to test a variety of inputs all at once:
 
+# operating_coasters = coaster_data[coaster_data.status == 'status.operating']
+# data_by_park = operating_coasters.groupby('park').name.count().reset_index()
+# parks_over_five = data_by_park[data_by_park.name >= 5].park
+#
+# for park in parks_over_five:
+#     inversions_by_park(coaster_data, park)
+#     plt.show()
 
-
-
-
+inversions_by_park(coaster_data, 'Cedar Point')
+# plt.show()
 
 plt.clf()
 
