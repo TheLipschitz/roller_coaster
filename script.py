@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import inflect
+p = inflect.engine()
 
 
 # 2. Roller coasters are thrilling amusement park rides designed to make you squeal and scream! They take you up high,
@@ -107,19 +109,20 @@ plt.clf()
 # write function to plot top n rankings over time here:
 
 
-def plot_top_five(n: int, rank_data: pd.DataFrame):
-    filtered_data = rank_data[rank_data['Rank'] <= 5]
+def plot_top_n(n: int, rank_data: pd.DataFrame):
+    filtered_data = rank_data[rank_data['Rank'] <= n]
     coasters = list(filtered_data['Name'].unique())
     years = sorted(list(filtered_data['Year of Rank'].unique()))
     markers = ['s', '*', '^', 'P', 'X']
     marker_idx = 0
+    number_word = p.number_to_words(n)
 
     for coaster in coasters:
         coaster_data = filtered_data[filtered_data['Name'] == coaster]
         coaster_ranks = list(coaster_data['Rank'])
         coaster_years = list(coaster_data['Year of Rank'])
 
-        if len(coaster_ranks) < 2:
+        if len(coaster_ranks) < 3:
             marker = markers[marker_idx]
             if marker_idx == 4:
                 marker_idx = 0
@@ -132,16 +135,16 @@ def plot_top_five(n: int, rank_data: pd.DataFrame):
 
     ax = plt.subplot()
     plt.xticks(years)
-    plt.yticks(range(5, 0, -1))
+    plt.yticks(range(n, 0, -1))
     plt.xlabel('Years')
     plt.ylabel('Rank')
-    plt.title(f'Top Five (in Class) Roller Coasters from {years[0]} to {years[-1]}')
+    plt.title(f'Top {number_word.title()} (in Class) Roller Coasters from {years[0]} to {years[-1]}')
     plt.legend(bbox_to_anchor=(1, 1), fontsize='x-small')
     ax.invert_yaxis()
     plt.subplots_adjust(right=0.75)
 
 
-plot_top_five(5, wood_data)
+plot_top_n(5, wood_data)
 # plt.show()
 
 plt.clf()
@@ -300,6 +303,17 @@ operating_pie(coaster_data)
 # plt.show()
 
 plt.clf()
+
+# 10.
+# .scatter() is another useful function in matplotlib that you might not have seen before. .scatter() produces a scatter
+# plot, which is similar to .plot() in that it plots points on a figure. .scatter(), however, does not connect the
+# points with a line. This allows you to analyze the relationship between to variables.
+#
+# Write a function that creates a scatter plot of two numeric columns of the roller coaster DataFrame. Your function
+# should take the roller coaster DataFrame and two-column names as arguments. Make sure to include informative labels
+# that describe your visualization.
+#
+# Call your function with the roller coaster DataFrame and two-column names.
 
 # write function to create scatter plot of any two numeric columns here:
 
