@@ -19,7 +19,7 @@ p = inflect.engine()
 
 wood_data = pd.read_csv('Golden_Ticket_Award_Winners_Wood.csv')
 steel_data = pd.read_csv('Golden_Ticket_Award_Winners_Steel.csv')
-print(wood_data.head(), steel_data.head())
+# print(wood_data.head(), steel_data.head())
 
 
 # 3. Write a function that will plot the ranking of a given roller coaster over time as a line. Your function should
@@ -348,5 +348,77 @@ def make_a_scatter(data: pd.DataFrame, column1_name: str, column2_name: str):
 
 make_a_scatter(coaster_data, 'speed', 'num_inversions')
 # plt.show()
+
+plt.clf()
+
+# 11.
+# Part of the fun of data analysis and visualization is digging into the data you have and answering questions
+# that come to your mind.
+#
+# Some questions you might want to answer with the datasets provided include:
+#
+# What roller coaster seating type is most popular? And do different seating types result in higher/faster/longer
+# roller coasters?
+
+
+def seating_popularity(data: pd.DataFrame):
+    filtered = data[(data.seating_type != 'Sit Down') & (data.seating_type != 'na')].dropna().reset_index()
+    seat_data = filtered.groupby(filtered.seating_type).name.count().reset_index()
+    seat_data.rename(columns={'name': 'counts'}, inplace=True)
+    seat_types = list(seat_data.seating_type)
+    seat_type_counts = list(seat_data.counts)
+
+    plt.bar(seat_types, seat_type_counts)
+    plt.xticks(rotation=50, fontsize='small', ha='right', y=0.01)
+    plt.ylabel('Number of Roller Coasters')
+    plt.title('Popularity of Different (non-Sit Down) Seating Types')
+
+
+def seating_stats(data: pd.DataFrame, stat: str):
+    accepted_input = ['speed', 'height', 'length', 'num_inversions']
+    if stat not in accepted_input:
+        print(f'Sorry, {stat} is not a valid parameter, please try again.')
+        return
+
+    filtered = data[data.seating_type != 'na'].dropna().reset_index()
+    averages_by_seat = filtered.groupby(filtered.seating_type)[['num_inversions',
+                                                                'speed',
+                                                                'height',
+                                                                'length']].mean().reset_index()
+    seat_types = list(averages_by_seat.seating_type)
+    stat_by_seat = list(averages_by_seat[stat])
+    stat_average = filtered[stat].mean()
+
+    if stat == 'num_inversions':
+        stat_name = 'Number of Inversions'
+    else:
+        stat_name = stat.title()
+
+    ax = plt.subplot()
+    plt.bar(seat_types, stat_by_seat)
+    plt.xticks(rotation=50, fontsize='small', ha='right', y=0.01)
+    plt.ylabel(f'Average {stat_name}', fontsize='small')
+    plt.title(f'Average {stat_name} by Seating Type')
+    ax.axhline(y=stat_average, label='Global Average', lw=1, color='red')
+    plt.legend(fontsize='small')
+
+
+# seating_popularity(coaster_data)
+
+seating_stats(coaster_data, 'length')
+# plt.show()
+
+plt.clf()
+
+# Do roller coaster manufacturers have any specialties (do they focus on speed, height, seating type, or inversions)?
+
+
+
+plt.clf()
+
+# Do amusement parks have any specialties?
+
+
+
 
 plt.clf()
