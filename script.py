@@ -237,8 +237,10 @@ def inversions_by_park(data: pd.DataFrame, park_name: str):
     else:
         f_size = 'medium'
 
+    ax = plt.subplot()
     plt.bar(x_ticks, inversion_counts)
-    plt.xticks(x_ticks, labels=coaster_names, rotation=50, fontsize=f_size, ha='right', y=0.01)
+    plt.xticks(x_ticks, rotation=50, fontsize=f_size, ha='right', y=0.01)
+    ax.set_xticklabels(coaster_names)
     plt.yticks(y_ticks)
     plt.ylabel('Number of Inversions')
     plt.subplots_adjust(bottom=0.3)
@@ -317,13 +319,34 @@ plt.clf()
 
 # write function to create scatter plot of any two numeric columns here:
 
+def make_a_scatter(data: pd.DataFrame, column1_name: str, column2_name: str):
+    accepted_columns = ['speed', 'height', 'length', 'num_inversions']
+    if column1_name not in accepted_columns:
+        print(f'The column "{column1_name}" doesn\'t contain numerical data, please try a different column.')
+        return
+    if column2_name not in accepted_columns:
+        print(f'The column "{column2_name}" doesn\'t contain numerical data, please try a different column.')
+        return
+
+    column1 = list(data[column1_name])
+    column2 = list(data[column2_name])
+
+    if column1_name == 'num_inversions':
+        column1_name = 'Number of Inversions'
+    else:
+        column1_name = column1_name.title()
+        if column2_name == 'num_inversions':
+            column2_name = 'Number of Inversions'
+        else:
+            column2_name = column1_name.title()
+
+    plt.scatter(column1, column2, marker='x')
+    plt.xlabel(column1_name)
+    plt.ylabel(column2_name)
+    plt.title(f'{column2_name} vs. {column1_name}')
 
 
-
-
-
-
-
-
+make_a_scatter(coaster_data, 'speed', 'num_inversions')
+# plt.show()
 
 plt.clf()
