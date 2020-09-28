@@ -256,16 +256,48 @@ inversions_by_park(coaster_data, 'Cedar Point')
 
 plt.clf()
 
+# 9.
+# Write a function that creates a pie chart that compares the number of operating roller coasters ('status.operating')
+# to the number of closed roller coasters ('status.closed.definitely'). Your function should take the roller coaster
+# DataFrame as an argument. Make sure to include informative labels that describe your visualization.
+#
+# Call your function with the roller coaster DataFrame.
+#
 # write function to plot pie chart of operating status here:
 
 
+def operating_pie(data: pd.DataFrame, park=None):
+    if park:
+        park_name = park
+        data = data[data.park == park]
+    else:
+        park_name = 'All Parks'
+
+    operating = data[data.status == 'status.operating'].status.count()
+    closed = data[data.status == 'status.closed.definitely'].status.count()
+    # print(operating, closed, operating + closed, data.count()
+    all_coasters = [operating, closed]
+
+    autotexts = plt.pie(all_coasters, colors=['green', 'red'], autopct='%.1f%%')[2]
+    plt.legend(bbox_to_anchor=(0.95, 0.95), labels=['Operating', 'Closed'])
+
+    for i, text in enumerate(autotexts):
+        percent = text.get_text()
+        if percent == '0.0%':
+            formatted = ''
+        else:
+            formatted = '\n'.join([percent, f'({all_coasters[i]})'])
+        text.set_text(formatted)
+    if operating == 0:
+        autotexts[1].set_position((0, 0))
+    if closed == 0:
+        autotexts[0].set_position((0, 0))
+    plt.title(f'Operating vs. Closed Roller Coasters at {park_name}')
+    plt.axis('equal')
 
 
-
-
-
-
-
+operating_pie(coaster_data)
+# plt.show()
 
 plt.clf()
 
