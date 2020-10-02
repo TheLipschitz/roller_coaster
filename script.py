@@ -413,11 +413,135 @@ plt.clf()
 # Do roller coaster manufacturers have any specialties (do they focus on speed, height, seating type, or inversions)?
 
 
+def get_speed_avgs(all_data: pd.DataFrame, filtered: pd.DataFrame):
+    all_speed = all_data.speed.mean()
+    filtered_speed = filtered.speed.mean()
+
+    return all_speed, filtered_speed
+
+
+def get_height_avgs(all_data: pd.DataFrame, filtered: pd.DataFrame):
+    all_height = all_data.height.mean()
+    filtered_height = filtered.height.mean()
+
+    return all_height, filtered_height
+
+
+def get_length_avgs(all_data: pd.DataFrame, filtered: pd.DataFrame):
+    all_length = all_data.length.mean()
+    filtered_length = filtered.length.mean()
+
+    return all_length, filtered_length
+
+
+def get_inversion_avgs(all_data: pd.DataFrame, filtered: pd.DataFrame):
+    all_inversions = all_data.num_inversions.mean()
+    filtered_inversions = filtered.num_inversions.mean()
+
+    return all_inversions, filtered_inversions
+
+
+def get_seating_counts(all_data: pd.DataFrame, filtered: pd.DataFrame):
+    all_seats = all_data[all_data.seating_type != 'na'].groupby('seating_type').name.count().reset_index().dropna()
+    all_seating_types = list(all_seats.seating_type)
+    all_seating_counts = list(all_seats.name)
+    filtered_seats = filtered[filtered.seating_type != 'na'].groupby('seating_type').name.count().reset_index().dropna()
+    filtered_seating_types = list(filtered_seats.seating_type)
+    filtered_seating_counts = list(filtered_seats.name)
+
+    return all_seating_types, all_seating_counts, filtered_seating_types, filtered_seating_counts
+
+
+def get_seating_diversity(counts: list, filtered_counts: list):
+    if len(counts) <= 1:
+        all_diversity = 0
+    else:
+        all_neum = np.sum([n * (n - 1) for n in counts])
+        all_denom = np.sum(counts) * (np.sum(counts) - 1)
+        all_diversity = 1 - all_neum / all_denom
+    if len(filtered_counts) <= 1:
+        filtered_diversity = 0
+    else:
+        filtered_neum = np.sum([n * (n - 1) for n in filtered_counts])
+        filtered_denom = np.sum(filtered_counts) * (np.sum(filtered_counts) - 1)
+        filtered_diversity = 1 - filtered_neum / filtered_denom
+
+    return all_diversity, filtered_diversity
+
+
+def calc_x_values(n: int, t: int, d: int, w: float):
+    return [t * element + w * n for element in range(d)]
+
+
+def normalize(values):
+    g_values = []
+    m_values = []
+    for g_value, m_value in values:
+        g_values.append(1)
+        m_values.append(m_value / g_value)
+
+    return g_values, m_values
+
+
+def autolabel(ax, bars, values):
+    units = ['\n(km/H)', '\n(km)', '\n(m)', '', '']
+    for i in range(len(bars)):
+        height = bars[i].get_height()
+        ax.annotate(f'{values[i]:.2f}{units[i]}', xy=(bars[i].get_x() + bars[i].get_width() / 2, height),
+                    xytext=(0, 3),  # 3 points vertical offset
+                    textcoords="offset points", ha='center', va='bottom', fontsize='xx-small')
+
+
+def manufacturer_specialties(data: pd.DataFrame, mfr: str):
+    mfr_data = data[data.manufacturer == mfr].fillna(0)
+    if len(mfr_data) == 0:
+        print(f'{mfr} cannot be found in the dataset. Please try again.')
+        return
+
+    seat_types, seat_counts, mfr_seat_types, mfr_seat_counts = get_seating_counts(data, mfr_data)
+    average_values = [get_speed_avgs(data, mfr_data),
+                      get_height_avgs(data, mfr_data),
+                      get_length_avgs(data, mfr_data),
+                      get_inversion_avgs(data, mfr_data),
+                      get_seating_diversity(seat_counts, mfr_seat_counts)]
+
+    global_y_values, mfr_y_values = normalize(average_values)
+    global_raw_values = [i[0] for i in average_values]
+    mfr_raw_values = [i[1] for i in average_values]
+    global_x_values = calc_x_values(1, 2, len(average_values), 0.8)
+    mfr_x_values = calc_x_values(2, 2, len(average_values), 0.8)
+    x_ticks = [(mfr_x_values[i] + global_x_values[i]) / 2 for i in range(len(global_x_values))]
+    x_tick_labels = ['Speed\nAverage',
+                     'Height\nAverage',
+                     'Length\nAverage',
+                     'Inversion\nAverage',
+                     'Seating\nDiversity\nIndex']
+
+    ax_bar = plt.subplot()
+    global_bars = plt.bar(global_x_values, global_y_values, label='All Manufacturers')
+    mfr_bars = plt.bar(mfr_x_values, mfr_y_values, label=mfr)
+    plt.xticks(x_ticks, labels=x_tick_labels, fontsize='small')
+    plt.ylabel('Ratio to Global Average')
+    plt.yticks(fontsize='small')
+    plt.title(f'Average Metrics for {mfr} vs. Global Average')
+    top = plt.ylim()[1]
+    plt.ylim(top=top * 1.3)
+    autolabel(ax_bar, global_bars, global_raw_values)
+    autolabel(ax_bar, mfr_bars, mfr_raw_values)
+    plt.legend(loc='best', bbox_to_anchor=(1, 1), fontsize='small')
+
+    return
+
+
+print(pd.unique(coaster_data.manufacturer))
+manufacturer_specialties(coaster_data, 'Intamin')
+plt.show()
 
 plt.clf()
 
 # Do amusement parks have any specialties?
 
+# TODO maybe try this as histograms all on one figure, with a vertical line for global average
 
 
 
