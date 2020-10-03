@@ -256,6 +256,7 @@ def inversions_by_park(data: pd.DataFrame, park_name: str):
 #     inversions_by_park(coaster_data, park)
 #     plt.show()
 
+
 inversions_by_park(coaster_data, 'Cedar Point')
 # plt.show()
 
@@ -318,6 +319,7 @@ plt.clf()
 # Call your function with the roller coaster DataFrame and two-column names.
 
 # write function to create scatter plot of any two numeric columns here:
+
 
 def make_a_scatter(data: pd.DataFrame, column1_name: str, column2_name: str):
     accepted_columns = ['speed', 'height', 'length', 'num_inversions']
@@ -469,6 +471,17 @@ def get_seating_diversity(counts: list, filtered_counts: list):
     return all_diversity, filtered_diversity
 
 
+def seating_bins(all_data: pd.DataFrame, park_data: pd.DataFrame):
+    all_grouped = all_data[all_data.seating_type != 'na'].groupby('seating_type').name.count().dropna()
+    park_grouped = park_data[all_data.seating_type != 'na'].groupby('seating_type').name.count().dropna()
+    for seat_type in all_grouped.index:
+        if seat_type not in park_grouped.index:
+            park_grouped = park_grouped.append(pd.Series(0, index=[seat_type]))
+    park_grouped.sort_index(inplace=True)
+
+    return list(all_grouped.index), list(all_grouped), list(park_grouped)
+
+
 def calc_x_values(n: int, t: int, d: int, w: float):
     return [t * element + w * n for element in range(d)]
 
@@ -530,19 +543,102 @@ def manufacturer_specialties(data: pd.DataFrame, mfr: str):
     autolabel(ax_bar, mfr_bars, mfr_raw_values)
     plt.legend(loc='best', bbox_to_anchor=(1, 1), fontsize='small')
 
-    return
-
 
 print(pd.unique(coaster_data.manufacturer))
 manufacturer_specialties(coaster_data, 'Intamin')
-plt.show()
+# plt.show()
 
 plt.clf()
 
 # Do amusement parks have any specialties?
 
-# TODO maybe try this as histograms all on one figure, with a vertical line for global average
+
+def park_specialties(data: pd.DataFrame, park_name: str, column_name: str):
+    accepted_columns = ['speed', 'height', 'length', 'num_inversions', 'seating_type']
+    if column_name not in accepted_columns:
+        print(f'The column "{column_name}" is not valid, please try a different column.')
+        return
+
+    park_data = data[data.park == park_name]
+    if len(park_data) == 0:
+        print(f'{park_name} cannot be found in the dataset. Please try again.')
+        return
+    if column_name == 'height':
+        x_label = 'Height'
+        data = data[data.height < 200]
+        global_values = list(data[column_name].dropna())
+        park_values = list(park_data[column_name].dropna())
+    elif column_name == 'speed':
+        x_label = 'Speed'
+        global_values = list(data[column_name].dropna())
+        park_values = list(park_data[column_name].dropna())
+    elif column_name == 'length':
+        x_label = 'Length'
+        global_values = list(data[column_name].dropna())
+        park_values = list(park_data[column_name].dropna())
+    elif column_name == 'num_inversions':
+        x_label = 'Number of Inversions'
+        global_values = list(data[column_name].fillna(0))
+        park_values = list(park_data[column_name].fillna(0))
+    else:
+        x_label = 'Seating Type'
+        seat_names, global_values, park_values = seating_bins(data, park_data)
+
+        ax = plt.subplot()
+        bins = plt.hist(range(len(global_values)), bins=len(global_values), weights=global_values,
+                        edgecolor='blue', density=True, alpha=0.5, align='left')[1]
+        plt.hist(range(len(park_values)), bins=len(park_values), weights=park_values,
+                 edgecolor='blue', density=True, alpha=0.5, align='left')
+        x_ticks = plt.xticks(bins[:-1], fontsize='x-small')[0]
+        ax.set_xticklabels(seat_names, rotation=50, rotation_mode='anchor', ha='right')
+        for tick in x_ticks:
+            tick.set_pad(15)
+        # bin_centers = 0.5 * np.diff(bins) + bins[:-1]
+        for val, x in zip(global_values, bins[:-1]):
+            ax.annotate(f'{val:.0f}', xy=(x, 0), xycoords=('data', 'axes fraction'), xytext=(0, -4),
+                        textcoords='offset points', va='top', ha='center', fontsize='xx-small', color='blue')
+        for val, x in zip(park_values, bins[:-1]):
+            ax.annotate(f'{val:.0f}', xy=(x, 0), xycoords=('data', 'axes fraction'), xytext=(0, -12),
+                        textcoords='offset points', va='top', ha='center', fontsize='xx-small', color='orange')
+        ax.annotate(f'Number of\nCoasters in Bin', xy=((bins[1] - bins[0]) * -1.5, 0),
+                    xycoords=('data', 'axes fraction'), xytext=(0, -8), textcoords='offset points',
+                    va='top', ha='center', fontsize='xx-small')
+
+    if column_name != 'seating_type':
+        max_val = data[column_name].max()
+        min_val = data[column_name].min()
+        bin_count = max(10, min(20, int(max_val - min_val)))
+
+        ax = plt.subplot()
+        bins = plt.hist(global_values, range=(min_val, max_val), bins=bin_count,
+                        edgecolor='blue', density=True, alpha=0.5)[1]
+        plt.hist(park_values, range=(min_val, max_val), bins=bin_count,
+                 edgecolor='orange', density=True, alpha=0.5)
+        plt.xlabel(x_label, labelpad=18)
+        x_ticks = plt.xticks([max(bins[i], 0) for i in range(len(bins)) if i % 2 == 0], fontsize='x-small')[0]
+        # ax.tick_params('x', length=14)
+        for tick in x_ticks:
+            tick.set_pad(0)
+        bin_centers = 0.5 * np.diff(bins) + bins[:-1]
+        global_vals = np.histogram(global_values, range=(min_val, max_val), bins=bin_count)[0]
+        park_vals = np.histogram(park_values, range=(min_val, max_val), bins=bin_count)[0]
+        for val, x in zip(global_vals, bin_centers):
+            ax.annotate(f'{val:.0f}', xy=(x, 0), xycoords=('data', 'axes fraction'), xytext=(0, -12),
+                        textcoords='offset points', va='top', ha='center', fontsize='xx-small', color='blue')
+        for val, x in zip(park_vals, bin_centers):
+            ax.annotate(f'{val:.0f}', xy=(x, 0), xycoords=('data', 'axes fraction'), xytext=(0, -20),
+                        textcoords='offset points', va='top', ha='center', fontsize='xx-small', color='orange')
+        ax.annotate(f'Number of\nCoasters in Bin', xy=(bin_centers[0] * -3.5, 0), xycoords=('data', 'axes fraction'),
+                    xytext=(0, -13), textcoords='offset points', va='top', ha='center', fontsize='xx-small')
+    plt.yticks(fontsize='x-small')
+    plt.ylabel('Probability Density')
+    plt.title(f'Distribution of {x_label} at {park_name} vs. All Data')
+    plt.legend(labels=['All Data', park_name], fontsize='small')
+
+    return
 
 
+park_specialties(coaster_data, 'Cedar Point', 'seating_type')
+plt.show()
 
 plt.clf()
